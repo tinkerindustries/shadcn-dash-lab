@@ -5,6 +5,7 @@ import { TopNavbar } from "./top-navbar"
 import { DashboardPage } from "@/components/dashboard/dashboard-page"
 import { ServersPage } from "@/components/servers/servers-page"
 import { ContainersPage } from "@/components/containers/containers-page"
+import { LogsPage } from "@/components/logs/logs-page"
 import { CommandPalette } from "@/components/command-palette"
 
 export function DashboardLayout() {
@@ -24,6 +25,8 @@ export function DashboardLayout() {
             <ServersPage />
           ) : activePage === "Containers" ? (
             <ContainersPage />
+          ) : activePage === "Logs" ? (
+            <LogsPage />
           ) : (
             <DashboardPage />
           )}

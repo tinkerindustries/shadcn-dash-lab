@@ -11,6 +11,7 @@ import {
   Users,
   Terminal,
   Settings,
+  ScrollText,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -37,6 +38,7 @@ export const iconMap: Record<string, LucideIcon> = {
   users: Users,
   terminal: Terminal,
   settings: Settings,
+  "scroll-text": ScrollText,
 }
 
 export const navGroups: NavGroup[] = [
@@ -53,6 +55,7 @@ export const navGroups: NavGroup[] = [
     label: "Infrastructure",
     items: [
       { title: "Containers", icon: "container" },
+      { title: "Logs", icon: "scroll-text" },
       { title: "Storage", icon: "hard-drive" },
       { title: "Network", icon: "network" },
       { title: "Security", icon: "shield" },
