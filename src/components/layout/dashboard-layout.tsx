@@ -5,15 +5,17 @@ import { TopNavbar } from "./top-navbar"
 import { DashboardPage } from "@/components/dashboard/dashboard-page"
 import { ServersPage } from "@/components/servers/servers-page"
 import { ContainersPage } from "@/components/containers/containers-page"
+import { CommandPalette } from "@/components/command-palette"
 
 export function DashboardLayout() {
   const [activePage, setActivePage] = useState("Dashboard")
+  const [commandOpen, setCommandOpen] = useState(false)
 
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar activePage={activePage} onNavigate={setActivePage} />
       <SidebarInset>
-        <TopNavbar />
+        <TopNavbar onOpenCommandPalette={() => setCommandOpen(true)} />
         <main
           className="flex-1"
           style={{ padding: "var(--space-page)" }}
@@ -27,6 +29,14 @@ export function DashboardLayout() {
           )}
         </main>
       </SidebarInset>
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        onNavigate={(page) => {
+          setActivePage(page)
+          setCommandOpen(false)
+        }}
+      />
     </SidebarProvider>
   )
 }

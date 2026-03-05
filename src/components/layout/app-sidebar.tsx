@@ -1,19 +1,8 @@
 import {
-  LayoutDashboard,
-  Server,
-  Container,
-  Bell,
-  Activity,
-  HardDrive,
-  Network,
-  Shield,
-  Mail,
-  Users,
-  Terminal,
-  Settings,
   ChevronsUpDown,
   LogOut,
   Monitor,
+  Settings,
 } from "lucide-react"
 import {
   Sidebar,
@@ -37,56 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-const iconMap = {
-  "layout-dashboard": LayoutDashboard,
-  server: Server,
-  bell: Bell,
-  activity: Activity,
-  container: Container,
-  "hard-drive": HardDrive,
-  network: Network,
-  shield: Shield,
-  mail: Mail,
-  users: Users,
-  terminal: Terminal,
-  settings: Settings,
-} as const
-
-type NavItem = {
-  title: string
-  icon: keyof typeof iconMap
-}
-
-const navGroups: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Overview",
-    items: [
-      { title: "Dashboard", icon: "layout-dashboard" },
-      { title: "Servers", icon: "server" },
-      { title: "Alerts", icon: "bell" },
-      { title: "Performance", icon: "activity" },
-    ],
-  },
-  {
-    label: "Infrastructure",
-    items: [
-      { title: "Containers", icon: "container" },
-      { title: "Storage", icon: "hard-drive" },
-      { title: "Network", icon: "network" },
-      { title: "Security", icon: "shield" },
-      { title: "Notifications", icon: "mail" },
-    ],
-  },
-  {
-    label: "Admin",
-    items: [
-      { title: "Users", icon: "users" },
-      { title: "Console", icon: "terminal" },
-      { title: "Settings", icon: "settings" },
-    ],
-  },
-]
+import { navGroups, iconMap } from "@/data/nav-items"
 
 type AppSidebarProps = {
   activePage: string

@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react"
+import { Bell, Search } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ThemeCustomizer } from "@/components/theme-customizer"
 
-export function TopNavbar() {
+type TopNavbarProps = {
+  onOpenCommandPalette: () => void
+}
+
+export function TopNavbar({ onOpenCommandPalette }: TopNavbarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <SidebarTrigger className="-ml-1" />
@@ -29,6 +33,17 @@ export function TopNavbar() {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="relative h-8 w-full justify-start rounded-md bg-muted/50 text-sm text-muted-foreground sm:w-64"
+          onClick={onOpenCommandPalette}
+        >
+          <Search className="mr-2 size-4" />
+          Search...
+          <kbd className="pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium sm:flex">
+            <span className="text-xs">&#8984;</span>K
+          </kbd>
+        </Button>
         <Button variant="ghost" size="icon" className="relative h-8 w-8">
           <Bell className="h-4 w-4" />
           <Badge

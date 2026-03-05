@@ -1,19 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import { type ColumnDef } from "@tanstack/react-table"
 import {
-  Play,
-  Square,
-  RotateCcw,
-  Pause,
-  Trash2,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { type Container, type ContainerStatus } from "@/data/containers-data"
+import { ContainerActions } from "./container-actions"
 
 const statusConfig: Record<
   ContainerStatus,
@@ -190,40 +185,7 @@ export const containerColumns: ColumnDef<Container>[] = [
   {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
-    cell: ({ row }) => {
-      const c = row.original
-      const isRunning = c.status === "running"
-      const isStopped = c.status === "stopped" || c.status === "exited"
-      return (
-        <div className="flex justify-end gap-1">
-          {isStopped ? (
-            <Button variant="ghost" size="icon" className="size-7" title="Start">
-              <Play className="size-3.5" />
-            </Button>
-          ) : isRunning ? (
-            <>
-              <Button variant="ghost" size="icon" className="size-7" title="Pause">
-                <Pause className="size-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="size-7" title="Stop">
-                <Square className="size-3.5" />
-              </Button>
-            </>
-          ) : null}
-          <Button variant="ghost" size="icon" className="size-7" title="Restart">
-            <RotateCcw className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-destructive hover:text-destructive"
-            title="Remove"
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      )
-    },
+    cell: ({ row }) => <ContainerActions container={row.original} />,
     enableSorting: false,
     enableHiding: false,
   },
