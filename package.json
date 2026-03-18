@@ -1,7 +1,23 @@
 {
   "name": "shadcn-dash-lab",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "A batteries-included React + shadcn/ui dashboard starter with 7 color themes, live theme editor, and polished UI patterns",
+  "author": "Geoff Rich",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrgeoffrich/shadcn-dash-lab.git"
+  },
+  "keywords": [
+    "shadcn-ui",
+    "react",
+    "dashboard",
+    "tailwindcss",
+    "theming",
+    "vite",
+    "typescript"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
