@@ -25,7 +25,7 @@ This is a React 19 + TypeScript SPA built with Vite. It's a server monitoring da
 
 ### Key Patterns
 
-**Theme System** (`src/components/theme-provider.tsx`): Central `ThemeProvider` context managing light/dark mode, color presets, border radius, density, font size, font family, and surface style. All settings persist to localStorage with `react-experiment` prefix. Color overrides are stored per-mode (light/dark). The `useTheme()` hook exposes all theme state and setters.
+**Theme System** (`src/components/theme-provider.tsx`): Central `ThemeProvider` context managing light/dark mode, color presets, border radius, density, font size, font family, and surface style. All settings persist to localStorage with `shadcn-dash-lab` prefix. Color overrides are stored per-mode (light/dark). The `useTheme()` hook exposes all theme state and setters.
 
 **Color Presets** (`src/data/theme-presets.ts`): Named color themes (neutral, slate, midnight, forest, sunset, cyberpunk, nord) that set CSS custom variables on `:root`. Colors use oklch color space. The theme customizer allows per-variable overrides on top of presets.
 

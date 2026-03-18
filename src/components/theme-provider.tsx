@@ -55,7 +55,7 @@ type ThemeProviderState = {
   setSurfaceStyle: (style: SurfaceStyle) => void
 }
 
-const STORAGE_PREFIX = "react-experiment"
+const STORAGE_PREFIX = "shadcn-dash-lab"
 
 const ThemeProviderContext = createContext<ThemeProviderState>({
   theme: "system",

@@ -1,6 +1,34 @@
-# Vite/React App for Experimentation - A DevOps Dashboard
+# shadcn-dash-lab
 
-A React-based DevOps dashboard built for experimenting with UI controls, theming, and component patterns. It includes a rich theme customization system, interactive data tables, virtualized log viewing, command palette navigation, and a variety of form controls. The idea is to provide a sandbox where you can try out different UI approaches and then take the patterns and components into a more complex, production-grade project.
+**A batteries-included dashboard starter for people who are tired of unstyled boilerplate.**
+
+Spin up a polished DevOps-style dashboard in seconds — then customize every pixel of it. Ships with 7 color themes, light/dark mode, adjustable density & typography, interactive charts, virtualized logs, a command palette, and a live theme editor so you can dial in exactly the look you want before carrying the patterns into your own app.
+
+### Why this exists
+
+Most shadcn/ui starters give you a blank canvas. This one gives you a *finished room* — KPI cards, server grids, uptime charts, alert tables, log explorer — so you can see how the pieces fit together at scale and rip out what you don't need.
+
+## Screenshots
+
+| Dark (default) | Light |
+|:-:|:-:|
+| ![Dashboard dark mode](screenshots/dashboard-dark.png) | ![Dashboard light mode](screenshots/dashboard-light.png) |
+
+### Switch themes on the fly
+
+Open the built-in theme customizer to swap color presets, toggle light/dark, change fonts, adjust density, and more — all persisted to localStorage.
+
+![Theme customizer panel](screenshots/theme-customizer.png)
+
+### 7 built-in color presets
+
+| Cyberpunk | Midnight | Forest |
+|:-:|:-:|:-:|
+| ![Cyberpunk theme](screenshots/theme-cyberpunk.png) | ![Midnight theme](screenshots/theme-midnight.png) | ![Forest theme](screenshots/theme-forest.png) |
+
+| Sunset | Nord | |
+|:-:|:-:|:-:|
+| ![Sunset theme](screenshots/theme-sunset.png) | ![Nord theme](screenshots/theme-nord.png) | |
 
 ## Prerequisites
 
