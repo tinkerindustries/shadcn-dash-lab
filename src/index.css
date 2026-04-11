@@ -114,6 +114,13 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Gradient border color tokens — override to customise gradient hues */
+:root {
+    --gradient-color-1: var(--primary);
+    --gradient-color-mid: transparent;
+    --gradient-color-2: transparent;
+}
+
 /* Density spacing tokens */
 :root {
     --space-page: 1.5rem;
@@ -244,6 +251,103 @@
 .dark[data-surface="bold"] [data-slot="tooltip-content"],
 .dark [data-surface="bold"] [data-slot="tooltip-content"] {
     box-shadow: 0 6px 20px -3px rgb(255 255 255 / 0.1), 0 2px 6px -1px rgb(255 255 255 / 0.07);
+}
+
+/* Card border chrome */
+/* "default" = standard border, no overrides */
+
+[data-card-border="none"] [data-slot="card"] {
+    border-color: transparent;
+}
+
+[data-card-border="glow"] [data-slot="card"] {
+    border-color: color-mix(in oklch, var(--primary) 45%, transparent);
+    outline: 2px solid color-mix(in oklch, var(--primary) 18%, transparent);
+    outline-offset: 1px;
+}
+
+[data-card-border="accent"] [data-slot="card"] {
+    border-top-color: var(--primary);
+    border-top-width: 2px;
+}
+
+/* Shared base for all gradient border variants */
+[data-card-border^="gradient-"] [data-slot="card"] {
+    position: relative;
+    border-color: transparent;
+}
+[data-card-border^="gradient-"] [data-slot="card"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+[data-card-border="gradient-corner"] [data-slot="card"]::before {
+    background: linear-gradient(135deg, var(--gradient-color-1) 0%, var(--gradient-color-2) 50%);
+}
+[data-card-border="gradient-top"] [data-slot="card"]::before {
+    background: linear-gradient(to right, var(--gradient-color-2), var(--gradient-color-1), var(--gradient-color-2));
+}
+[data-card-border="gradient-dual"] [data-slot="card"]::before {
+    background: linear-gradient(135deg, var(--gradient-color-1) 0%, var(--gradient-color-mid) 50%, var(--gradient-color-2) 100%);
+}
+[data-card-border="gradient-aurora"] [data-slot="card"]::before {
+    background: linear-gradient(to right, var(--chart-1), var(--chart-2), var(--chart-3), var(--chart-4), var(--chart-5));
+}
+[data-card-border="gradient-halo"] [data-slot="card"]::before {
+    background: radial-gradient(ellipse 100% 80% at 50% 0%, var(--gradient-color-1), var(--gradient-color-2) 65%);
+}
+[data-card-border="gradient-pulse"] [data-slot="card"]::before {
+    background: linear-gradient(180deg, var(--gradient-color-1) 0%, var(--gradient-color-2) 100%);
+}
+
+/* Alpha channel slider for gradient color pickers */
+.alpha-slider {
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+}
+.alpha-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background: transparent;
+}
+.alpha-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    margin-top: -3px;
+}
+.alpha-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: transparent;
+}
+.alpha-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    box-sizing: border-box;
 }
 
 @layer base {

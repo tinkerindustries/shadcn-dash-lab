@@ -8,6 +8,9 @@ import {
 export type Theme = "dark" | "light" | "system"
 export type Density = "compact" | "default" | "comfortable"
 export type SurfaceStyle = "flat" | "default" | "elevated" | "bold"
+export type CardBorder = "default" | "none" | "glow" | "accent"
+  | "gradient-corner" | "gradient-top" | "gradient-dual"
+  | "gradient-aurora" | "gradient-halo" | "gradient-pulse"
 export type FontFamily =
   | "system"
   | "inter"
@@ -53,6 +56,15 @@ type ThemeProviderState = {
   setFontFamily: (font: FontFamily) => void
   surfaceStyle: SurfaceStyle
   setSurfaceStyle: (style: SurfaceStyle) => void
+  cardBorder: CardBorder
+  setCardBorder: (style: CardBorder) => void
+  gradientColor1: string
+  setGradientColor1: (color: string) => void
+  gradientColorMid: string
+  setGradientColorMid: (color: string) => void
+  gradientColor2: string
+  setGradientColor2: (color: string) => void
+  resetGradientColors: () => void
 }
 
 const STORAGE_PREFIX = "shadcn-dash-lab"
@@ -76,6 +88,15 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
   setFontFamily: () => null,
   surfaceStyle: "default",
   setSurfaceStyle: () => null,
+  cardBorder: "default",
+  setCardBorder: () => null,
+  gradientColor1: "",
+  setGradientColor1: () => null,
+  gradientColorMid: "",
+  setGradientColorMid: () => null,
+  gradientColor2: "",
+  setGradientColor2: () => null,
+  resetGradientColors: () => null,
 })
 
 // ── Font presets ─────────────────────────────────────────────────
@@ -172,6 +193,18 @@ export function ThemeProvider({
   const [surfaceStyle, setSurfaceStyleState] = useState<SurfaceStyle>(
     () => (localStorage.getItem(`${STORAGE_PREFIX}-surface`) as SurfaceStyle) || "default"
   )
+  const [cardBorder, setCardBorderState] = useState<CardBorder>(
+    () => (localStorage.getItem(`${STORAGE_PREFIX}-card-border`) as CardBorder) || "default"
+  )
+  const [gradientColor1, setGradientColor1State] = useState<string>(
+    () => localStorage.getItem(`${STORAGE_PREFIX}-gradient-color-1`) || ""
+  )
+  const [gradientColorMid, setGradientColorMidState] = useState<string>(
+    () => localStorage.getItem(`${STORAGE_PREFIX}-gradient-color-mid`) || ""
+  )
+  const [gradientColor2, setGradientColor2State] = useState<string>(
+    () => localStorage.getItem(`${STORAGE_PREFIX}-gradient-color-2`) || ""
+  )
 
   // Preload Google Fonts
   useEffect(() => {
@@ -246,6 +279,24 @@ export function ThemeProvider({
   useEffect(() => {
     document.documentElement.setAttribute("data-surface", surfaceStyle)
   }, [surfaceStyle])
+  useEffect(() => {
+    document.documentElement.setAttribute("data-card-border", cardBorder)
+  }, [cardBorder])
+  useEffect(() => {
+    const root = document.documentElement
+    if (gradientColor1) root.style.setProperty("--gradient-color-1", gradientColor1)
+    else root.style.removeProperty("--gradient-color-1")
+  }, [gradientColor1])
+  useEffect(() => {
+    const root = document.documentElement
+    if (gradientColorMid) root.style.setProperty("--gradient-color-mid", gradientColorMid)
+    else root.style.removeProperty("--gradient-color-mid")
+  }, [gradientColorMid])
+  useEffect(() => {
+    const root = document.documentElement
+    if (gradientColor2) root.style.setProperty("--gradient-color-2", gradientColor2)
+    else root.style.removeProperty("--gradient-color-2")
+  }, [gradientColor2])
 
   // System theme change listener
   useEffect(() => {
@@ -321,6 +372,33 @@ export function ThemeProvider({
     localStorage.setItem(`${STORAGE_PREFIX}-surface`, s)
     setSurfaceStyleState(s)
   }
+  const setCardBorder = (s: CardBorder) => {
+    localStorage.setItem(`${STORAGE_PREFIX}-card-border`, s)
+    setCardBorderState(s)
+  }
+  const setGradientColor1 = (c: string) => {
+    if (c) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-1`, c)
+    else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-1`)
+    setGradientColor1State(c)
+  }
+  const setGradientColorMid = (c: string) => {
+    if (c) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-mid`, c)
+    else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-mid`)
+    setGradientColorMidState(c)
+  }
+  const setGradientColor2 = (c: string) => {
+    if (c) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-2`, c)
+    else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-2`)
+    setGradientColor2State(c)
+  }
+  const resetGradientColors = () => {
+    localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-1`)
+    localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-mid`)
+    localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-2`)
+    setGradientColor1State("")
+    setGradientColorMidState("")
+    setGradientColor2State("")
+  }
 
   return (
     <ThemeProviderContext.Provider
@@ -343,6 +421,15 @@ export function ThemeProvider({
         setFontFamily,
         surfaceStyle,
         setSurfaceStyle,
+        cardBorder,
+        setCardBorder,
+        gradientColor1,
+        setGradientColor1,
+        gradientColorMid,
+        setGradientColorMid,
+        gradientColor2,
+        setGradientColor2,
+        resetGradientColors,
       }}
     >
       {children}

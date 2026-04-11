@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Palette, Monitor, Moon, Sun, Check, ChevronDown, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -24,6 +24,7 @@ import {
   type Density,
   type FontFamily,
   type SurfaceStyle,
+  type CardBorder,
 } from "@/components/theme-provider"
 import { colorGroups } from "@/data/theme-presets"
 import { cssVarToHex } from "@/lib/color-utils"
@@ -274,6 +275,140 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <h4 className="text-sm font-medium">{children}</h4>
 }
 
+// ── Gradient color picker ───────────────────────────────────────
+
+const CHECKERBOARD = {
+  backgroundImage: "linear-gradient(45deg,#bbb 25%,transparent 25%),linear-gradient(-45deg,#bbb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#bbb 75%),linear-gradient(-45deg,transparent 75%,#bbb 75%)",
+  backgroundSize: "6px 6px",
+  backgroundPosition: "0 0,0 3px,3px -3px,-3px 0px",
+} as const
+
+function parseColorValue(v: string): { hex: string; alpha: number } {
+  if (!v || v === "transparent") return { hex: "#000000", alpha: 0 }
+  const m = v.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/)
+  if (m) {
+    const hex = "#" + ((1 << 24) + (parseInt(m[1]) << 16) + (parseInt(m[2]) << 8) + parseInt(m[3])).toString(16).slice(1)
+    return { hex, alpha: parseFloat(m[4]) }
+  }
+  if (v.startsWith("#")) return { hex: v.slice(0, 7), alpha: 1 }
+  return { hex: "#000000", alpha: 1 }
+}
+
+function buildColorValue(hex: string, alpha: number): string {
+  if (alpha >= 1) return hex
+  if (alpha <= 0) return "transparent"
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${Math.round(alpha * 100) / 100})`
+}
+
+function GradientColorPicker({
+  label,
+  varName,
+  stored,
+  onPick,
+  onReset,
+  emptyLabel,
+}: {
+  label: string
+  varName: string
+  stored: string
+  onPick: (value: string) => void
+  onReset: () => void
+  emptyLabel?: string
+}) {
+  const isTransparentDefault = emptyLabel === "transparent"
+
+  const getInitial = () => {
+    if (stored) return parseColorValue(stored)
+    if (isTransparentDefault) return { hex: "#000000", alpha: 0 }
+    return { hex: cssVarToHex(varName), alpha: 1 }
+  }
+
+  const [hex, setHex] = useState(() => getInitial().hex)
+  const [alpha, setAlpha] = useState(() => getInitial().alpha)
+
+  useEffect(() => {
+    if (!stored) {
+      if (isTransparentDefault) { setHex("#000000"); setAlpha(0) }
+      else { setHex(cssVarToHex(varName)); setAlpha(1) }
+    }
+  }, [stored, varName, isTransparentDefault])
+
+  const handleHexChange = (newHex: string) => {
+    setHex(newHex)
+    onPick(buildColorValue(newHex, alpha))
+  }
+
+  const handleAlphaChange = (newAlpha: number) => {
+    setAlpha(newAlpha)
+    onPick(buildColorValue(hex, newAlpha))
+  }
+
+  const hasOverride = !!stored
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const displayColor = buildColorValue(hex, alpha)
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        {/* Color swatch + picker */}
+        <label className="relative cursor-pointer flex-shrink-0">
+          <input
+            type="color"
+            value={hex}
+            onChange={(e) => handleHexChange(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          />
+          <div
+            className={cn(
+              "h-6 w-6 rounded-md border transition-all overflow-hidden",
+              hasOverride ? "border-primary ring-1 ring-primary/30" : "border-border"
+            )}
+            style={CHECKERBOARD}
+          >
+            <div className="w-full h-full" style={{ backgroundColor: displayColor }} />
+          </div>
+        </label>
+        <span className="text-xs flex-1">{label}</span>
+        {hasOverride && (
+          <button
+            onClick={onReset}
+            className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title={`Reset to ${emptyLabel ?? "theme color"}`}
+          >
+            <RotateCcw className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      {/* Alpha slider */}
+      <div className="flex items-center gap-2 pl-8">
+        <div className="relative flex-1 h-4 flex items-center">
+          {/* Track: checkerboard + gradient overlay */}
+          <div className="absolute inset-x-0 h-2 rounded-full overflow-hidden" style={{ top: "50%", transform: "translateY(-50%)" }}>
+            <div className="absolute inset-0" style={CHECKERBOARD} />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(${r},${g},${b},0), rgba(${r},${g},${b},1))` }} />
+          </div>
+          <input
+            type="range"
+            min={0} max={100} step={1}
+            value={Math.round(alpha * 100)}
+            onChange={(e) => handleAlphaChange(parseInt(e.target.value) / 100)}
+            className="alpha-slider relative w-full"
+          />
+        </div>
+        <span className="text-[10px] tabular-nums text-muted-foreground w-7 text-right">
+          {Math.round(alpha * 100)}%
+        </span>
+      </div>
+    </div>
+  )
+}
+
 // ── Main export ─────────────────────────────────────────────────
 
 const radiusOptions = [0, 0.25, 0.5, 0.75, 1.0]
@@ -283,6 +418,46 @@ const densityOptions: { value: Density; label: string }[] = [
   { value: "default", label: "Default" },
   { value: "comfortable", label: "Comfortable" },
 ]
+const solidBorderOptions: { value: CardBorder; label: string; description: string }[] = [
+  { value: "default", label: "Default", description: "Subtle border" },
+  { value: "none", label: "None", description: "No border" },
+  { value: "glow", label: "Glow", description: "Primary color ring" },
+  { value: "accent", label: "Accent", description: "Colored top edge" },
+]
+
+const gradientBorderOptions: { value: CardBorder; label: string; description: string }[] = [
+  { value: "gradient-corner", label: "Corner", description: "Top-left diagonal" },
+  { value: "gradient-top", label: "Top", description: "Centred top glow" },
+  { value: "gradient-dual", label: "Dual", description: "Opposite corners" },
+  { value: "gradient-aurora", label: "Aurora", description: "Full rainbow sweep" },
+  { value: "gradient-halo", label: "Halo", description: "Radial top glow" },
+  { value: "gradient-pulse", label: "Pulse", description: "Top-to-bottom fade" },
+]
+
+function gradientPreviewStyle(value: CardBorder): React.CSSProperties {
+  const fill = "var(--card)"
+  const c1 = "var(--gradient-color-1)"
+  const cmid = "var(--gradient-color-mid)"
+  const c2 = "var(--gradient-color-2)"
+  const b = "1px solid transparent"
+  switch (value) {
+    case "gradient-corner":
+      return { border: b, background: `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(135deg, ${c1} 0%, ${c2} 50%) border-box` }
+    case "gradient-top":
+      return { border: b, background: `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(to right, ${c2}, ${c1}, ${c2}) border-box` }
+    case "gradient-dual":
+      return { border: b, background: `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(135deg, ${c1} 0%, ${cmid} 50%, ${c2} 100%) border-box` }
+    case "gradient-aurora":
+      return { border: b, background: `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(to right, var(--chart-1), var(--chart-2), var(--chart-3), var(--chart-4), var(--chart-5)) border-box` }
+    case "gradient-halo":
+      return { border: b, background: `linear-gradient(${fill}, ${fill}) padding-box, radial-gradient(ellipse 100% 80% at 50% 0%, ${c1}, ${c2} 65%) border-box` }
+    case "gradient-pulse":
+      return { border: b, background: `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(180deg, ${c1} 0%, ${c2} 100%) border-box` }
+    default:
+      return {}
+  }
+}
+
 const surfaceOptions: { value: SurfaceStyle; label: string; description: string }[] = [
   { value: "flat", label: "Flat", description: "No shadows, borders only" },
   { value: "default", label: "Subtle", description: "Light shadow on cards" },
@@ -300,6 +475,11 @@ export function ThemeCustomizer() {
     fontSize, setFontSize,
     fontFamily, setFontFamily,
     surfaceStyle, setSurfaceStyle,
+    cardBorder, setCardBorder,
+    gradientColor1, setGradientColor1,
+    gradientColorMid, setGradientColorMid,
+    gradientColor2, setGradientColor2,
+    resetGradientColors,
   } = useTheme()
 
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -468,6 +648,128 @@ export function ThemeCustomizer() {
                   )}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* ── Card Border ────────────────────── */}
+          <div className="space-y-3">
+            <SectionLabel>Card Border</SectionLabel>
+
+            {/* Solid options */}
+            <div className="grid grid-cols-2 gap-2">
+              {solidBorderOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setCardBorder(option.value)}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 transition-colors cursor-pointer",
+                    cardBorder === option.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <div className="w-full flex gap-1.5">
+                    {[0, 1].map((i) => (
+                      <div
+                        key={i}
+                        className="h-6 flex-1 rounded-[4px] bg-card"
+                        style={
+                          option.value === "default"
+                            ? { border: "1px solid var(--border)" }
+                            : option.value === "none"
+                              ? { border: "1px solid transparent" }
+                              : option.value === "glow"
+                                ? {
+                                    border: "1px solid color-mix(in oklch, var(--primary) 45%, transparent)",
+                                    outline: "2px solid color-mix(in oklch, var(--primary) 18%, transparent)",
+                                    outlineOffset: "1px",
+                                  }
+                                : {
+                                    border: "1px solid var(--border)",
+                                    borderTop: "2px solid var(--primary)",
+                                  }
+                        }
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-medium">{option.label}</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight text-center">{option.description}</span>
+                  {cardBorder === option.value && (
+                    <div className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Gradient options */}
+            <p className="text-[11px] text-muted-foreground">Gradient</p>
+            <div className="grid grid-cols-2 gap-2">
+              {gradientBorderOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setCardBorder(option.value)}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 transition-colors cursor-pointer",
+                    cardBorder === option.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <div className="w-full flex gap-1.5">
+                    {[0, 1].map((i) => (
+                      <div
+                        key={i}
+                        className="h-6 flex-1 rounded-[4px]"
+                        style={gradientPreviewStyle(option.value)}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-medium">{option.label}</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight text-center">{option.description}</span>
+                  {cardBorder === option.value && (
+                    <div className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Gradient color pickers */}
+            <p className="text-[11px] text-muted-foreground">Gradient Colors</p>
+            <div className="space-y-2">
+              <GradientColorPicker
+                label="Color 1 (start)"
+                varName="--gradient-color-1"
+                stored={gradientColor1}
+                onPick={setGradientColor1}
+                onReset={() => setGradientColor1("")}
+              />
+              <GradientColorPicker
+                label="Mid (Dual only)"
+                varName="--gradient-color-mid"
+                stored={gradientColorMid}
+                onPick={setGradientColorMid}
+                onReset={() => setGradientColorMid("")}
+                emptyLabel="transparent"
+              />
+              <GradientColorPicker
+                label="Color 2 (end/fade)"
+                varName="--gradient-color-2"
+                stored={gradientColor2}
+                onPick={setGradientColor2}
+                onReset={() => setGradientColor2("")}
+                emptyLabel="transparent"
+              />
+              {(gradientColor1 || gradientColor2) && (
+                <button
+                  onClick={resetGradientColors}
+                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer mt-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reset to theme color
+                </button>
+              )}
             </div>
           </div>
 
