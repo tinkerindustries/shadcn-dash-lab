@@ -6,6 +6,25 @@ import {
 } from "@/data/theme-presets"
 
 export type Theme = "dark" | "light" | "system"
+
+export type SavedPreset = {
+  id: string
+  name: string
+  createdAt: number
+  theme: Theme
+  colorPreset: ColorPresetName
+  colorOverridesLight: Record<string, string>
+  colorOverridesDark: Record<string, string>
+  radius: number
+  density: Density
+  fontSize: number
+  fontFamily: FontFamily
+  surfaceStyle: SurfaceStyle
+  cardBorder: CardBorder
+  gradientColor1: string
+  gradientColorMid: string
+  gradientColor2: string
+}
 export type Density = "compact" | "default" | "comfortable"
 export type SurfaceStyle = "flat" | "default" | "elevated" | "bold"
 export type CardBorder = "default" | "none" | "glow" | "accent"
@@ -65,6 +84,10 @@ type ThemeProviderState = {
   gradientColor2: string
   setGradientColor2: (color: string) => void
   resetGradientColors: () => void
+  savedPresets: SavedPreset[]
+  saveCurrentAsPreset: (name: string) => void
+  loadSavedPreset: (id: string) => void
+  deleteSavedPreset: (id: string) => void
 }
 
 const STORAGE_PREFIX = "shadcn-dash-lab"
@@ -97,6 +120,10 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
   gradientColor2: "",
   setGradientColor2: () => null,
   resetGradientColors: () => null,
+  savedPresets: [],
+  saveCurrentAsPreset: () => null,
+  loadSavedPreset: () => null,
+  deleteSavedPreset: () => null,
 })
 
 // ── Font presets ─────────────────────────────────────────────────
@@ -144,6 +171,19 @@ function getEffectiveMode(theme: Theme): "light" | "dark" {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   }
   return theme
+}
+
+function loadSavedPresetsFromStorage(): SavedPreset[] {
+  try {
+    const raw = localStorage.getItem(`${STORAGE_PREFIX}-saved-presets`)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function persistSavedPresets(presets: SavedPreset[]) {
+  localStorage.setItem(`${STORAGE_PREFIX}-saved-presets`, JSON.stringify(presets))
 }
 
 function loadOverrides(mode: "light" | "dark"): Record<string, string> {
@@ -204,6 +244,9 @@ export function ThemeProvider({
   )
   const [gradientColor2, setGradientColor2State] = useState<string>(
     () => localStorage.getItem(`${STORAGE_PREFIX}-gradient-color-2`) || ""
+  )
+  const [savedPresetsState, setSavedPresetsState] = useState<SavedPreset[]>(
+    () => loadSavedPresetsFromStorage()
   )
 
   // Preload Google Fonts
@@ -400,6 +443,72 @@ export function ThemeProvider({
     setGradientColor2State("")
   }
 
+  const saveCurrentAsPreset = (name: string) => {
+    const newPreset: SavedPreset = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: name.trim(),
+      createdAt: Date.now(),
+      theme,
+      colorPreset: colorPresetName,
+      colorOverridesLight: loadOverrides("light"),
+      colorOverridesDark: loadOverrides("dark"),
+      radius,
+      density,
+      fontSize,
+      fontFamily,
+      surfaceStyle,
+      cardBorder,
+      gradientColor1,
+      gradientColorMid,
+      gradientColor2,
+    }
+    const next = [...savedPresetsState, newPreset]
+    setSavedPresetsState(next)
+    persistSavedPresets(next)
+  }
+
+  const loadSavedPreset = (id: string) => {
+    const preset = savedPresetsState.find((p) => p.id === id)
+    if (!preset) return
+    const effectiveMode = getEffectiveMode(preset.theme)
+    const activeOverrides =
+      effectiveMode === "light" ? preset.colorOverridesLight : preset.colorOverridesDark
+    localStorage.setItem(storageKey, preset.theme)
+    localStorage.setItem(`${STORAGE_PREFIX}-color-preset`, preset.colorPreset)
+    saveOverrides("light", preset.colorOverridesLight)
+    saveOverrides("dark", preset.colorOverridesDark)
+    localStorage.setItem(`${STORAGE_PREFIX}-radius`, String(preset.radius))
+    localStorage.setItem(`${STORAGE_PREFIX}-density`, preset.density)
+    localStorage.setItem(`${STORAGE_PREFIX}-font-size`, String(preset.fontSize))
+    localStorage.setItem(`${STORAGE_PREFIX}-font-family`, preset.fontFamily)
+    localStorage.setItem(`${STORAGE_PREFIX}-surface`, preset.surfaceStyle)
+    localStorage.setItem(`${STORAGE_PREFIX}-card-border`, preset.cardBorder)
+    if (preset.gradientColor1) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-1`, preset.gradientColor1)
+    else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-1`)
+    if (preset.gradientColorMid) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-mid`, preset.gradientColorMid)
+    else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-mid`)
+    if (preset.gradientColor2) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-2`, preset.gradientColor2)
+    else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-2`)
+    setThemeState(preset.theme)
+    setColorPresetState(preset.colorPreset)
+    setColorOverridesState(activeOverrides)
+    setRadiusState(preset.radius)
+    setDensityState(preset.density)
+    setFontSizeState(preset.fontSize)
+    setFontFamilyState(preset.fontFamily)
+    setSurfaceStyleState(preset.surfaceStyle)
+    setCardBorderState(preset.cardBorder)
+    setGradientColor1State(preset.gradientColor1)
+    setGradientColorMidState(preset.gradientColorMid)
+    setGradientColor2State(preset.gradientColor2)
+  }
+
+  const deleteSavedPreset = (id: string) => {
+    const next = savedPresetsState.filter((p) => p.id !== id)
+    setSavedPresetsState(next)
+    persistSavedPresets(next)
+  }
+
   return (
     <ThemeProviderContext.Provider
       value={{
@@ -430,6 +539,10 @@ export function ThemeProvider({
         gradientColor2,
         setGradientColor2,
         resetGradientColors,
+        savedPresets: savedPresetsState,
+        saveCurrentAsPreset,
+        loadSavedPreset,
+        deleteSavedPreset,
       }}
     >
       {children}

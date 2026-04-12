@@ -1,20 +1,13 @@
 import { useState, useEffect } from "react"
-import { Palette, Monitor, Moon, Sun, Check, ChevronDown, RotateCcw } from "lucide-react"
+import { Palette, Monitor, Moon, Sun, Check, ChevronDown, RotateCcw, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import {
   useTheme,
   fontPresets,
@@ -409,7 +402,7 @@ function GradientColorPicker({
   )
 }
 
-// ── Main export ─────────────────────────────────────────────────
+// ── Main panel ──────────────────────────────────────────────────
 
 const radiusOptions = [0, 0.25, 0.5, 0.75, 1.0]
 const fontSizeOptions = [13, 14, 15, 16, 18]
@@ -465,7 +458,27 @@ const surfaceOptions: { value: SurfaceStyle; label: string; description: string 
   { value: "bold", label: "Bold", description: "Heavy shadows, inset edges" },
 ]
 
-export function ThemeCustomizer() {
+export function ThemeCustomizerTrigger({
+  open,
+  onToggle,
+}: {
+  open: boolean
+  onToggle: () => void
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn("h-8 w-8", open && "bg-accent text-accent-foreground")}
+      onClick={onToggle}
+    >
+      <Palette className="h-4 w-4" />
+      <span className="sr-only">Theme settings</span>
+    </Button>
+  )
+}
+
+export function ThemeCustomizerPanel({ onClose }: { onClose: () => void }) {
   const {
     theme, setTheme,
     colorPreset, setColorPreset,
@@ -480,28 +493,92 @@ export function ThemeCustomizer() {
     gradientColorMid, setGradientColorMid,
     gradientColor2, setGradientColor2,
     resetGradientColors,
+    savedPresets,
+    saveCurrentAsPreset,
+    loadSavedPreset,
+    deleteSavedPreset,
   } = useTheme()
 
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [presetName, setPresetName] = useState("")
   const overrideCount = Object.keys(colorOverrides).length
 
-  return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Palette className="h-4 w-4" />
-          <span className="sr-only">Theme settings</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Theme Settings</SheetTitle>
-          <SheetDescription>
-            Customize the dashboard appearance. Changes are saved automatically.
-          </SheetDescription>
-        </SheetHeader>
+  const handleSavePreset = () => {
+    if (!presetName.trim()) return
+    saveCurrentAsPreset(presetName)
+    setPresetName("")
+  }
 
-        <div className="flex flex-col gap-6 px-4 pb-8">
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+        <div>
+          <h2 className="font-semibold text-sm">Theme Settings</h2>
+          <p className="text-xs text-muted-foreground">Changes are saved automatically.</p>
+        </div>
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose}>
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </Button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-6 px-4 py-4 pb-8">
+
+          {/* ── Saved Presets ────────────────────── */}
+          <div className="space-y-3">
+            <SectionLabel>My Presets</SectionLabel>
+            <div className="flex gap-2">
+              <Input
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSavePreset()}
+                placeholder="Preset name…"
+                className="h-8 text-xs"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleSavePreset}
+                disabled={!presetName.trim()}
+                className="shrink-0"
+              >
+                Save
+              </Button>
+            </div>
+            {savedPresets.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">No saved presets yet. Configure a theme and save it above.</p>
+            ) : (
+              <div className="space-y-1">
+                {savedPresets.map((preset) => (
+                  <div
+                    key={preset.id}
+                    className="flex items-center gap-2 rounded-md border px-3 py-1.5"
+                  >
+                    <span className="flex-1 truncate text-xs font-medium">{preset.name}</span>
+                    <button
+                      onClick={() => loadSavedPreset(preset.id)}
+                      className="text-xs text-primary hover:underline cursor-pointer shrink-0"
+                    >
+                      Load
+                    </button>
+                    <button
+                      onClick={() => deleteSavedPreset(preset.id)}
+                      className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0"
+                      title="Delete preset"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
           {/* ── Appearance ──────────────────────── */}
           <div className="space-y-3">
             <SectionLabel>Appearance</SectionLabel>
@@ -797,8 +874,9 @@ export function ThemeCustomizer() {
             </div>
             <p className="text-[11px] text-muted-foreground">Controls spacing between dashboard elements.</p>
           </div>
+
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   )
 }

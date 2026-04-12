@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ThemeCustomizer } from "@/components/theme-customizer"
+import { ThemeCustomizerTrigger } from "@/components/theme-customizer"
 
 type TopNavbarProps = {
   onOpenCommandPalette: () => void
+  customizerOpen: boolean
+  onToggleCustomizer: () => void
 }
 
-export function TopNavbar({ onOpenCommandPalette: _onOpenCommandPalette }: TopNavbarProps) {
+export function TopNavbar({ onOpenCommandPalette: _onOpenCommandPalette, customizerOpen, onToggleCustomizer }: TopNavbarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <SidebarTrigger className="-ml-1" />
@@ -33,7 +35,7 @@ export function TopNavbar({ onOpenCommandPalette: _onOpenCommandPalette }: TopNa
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
-<Button variant="ghost" size="icon" className="relative h-8 w-8">
+        <Button variant="ghost" size="icon" className="relative h-8 w-8">
           <Bell className="h-4 w-4" />
           <Badge
             variant="destructive"
@@ -42,7 +44,7 @@ export function TopNavbar({ onOpenCommandPalette: _onOpenCommandPalette }: TopNa
             3
           </Badge>
         </Button>
-        <ThemeCustomizer />
+        <ThemeCustomizerTrigger open={customizerOpen} onToggle={onToggleCustomizer} />
       </div>
     </header>
   )
