@@ -16,9 +16,9 @@ export function DashboardLayout() {
   const [customizerOpen, setCustomizerOpen] = useState(false)
 
   return (
-    <div className="flex h-svh overflow-hidden">
+    <div className="flex">
       {/* Main content area */}
-      <div className="flex-1 min-w-0 overflow-hidden">
+      <div className="flex-1 min-w-0">
         <SidebarProvider defaultOpen={true}>
           <AppSidebar activePage={activePage} onNavigate={setActivePage} />
           <SidebarInset>
@@ -53,10 +53,10 @@ export function DashboardLayout() {
         </SidebarProvider>
       </div>
 
-      {/* Theme customizer panel — pushes content, no overlay */}
+      {/* Theme customizer panel — pushes content, no overlay, sticky so it stays visible while scrolling */}
       <div
         className={cn(
-          "shrink-0 border-l bg-background transition-[width] duration-300 overflow-hidden",
+          "sticky top-0 h-svh shrink-0 border-l bg-background transition-[width] duration-300 overflow-hidden",
           customizerOpen ? "w-[320px]" : "w-0"
         )}
       >
