@@ -21,6 +21,7 @@ export type SavedPreset = {
   fontFamily: FontFamily
   surfaceStyle: SurfaceStyle
   cardBorder: CardBorder
+  buttonStyle?: ButtonStyle
   gradientColor1: string
   gradientColorMid: string
   gradientColor2: string
@@ -30,6 +31,17 @@ export type SurfaceStyle = "flat" | "default" | "elevated" | "bold"
 export type CardBorder = "default" | "none" | "glow" | "accent"
   | "gradient-corner" | "gradient-top" | "gradient-dual"
   | "gradient-aurora" | "gradient-halo" | "gradient-pulse"
+export type ButtonStyle =
+  | "default"
+  | "physical"
+  | "bevel"
+  | "glass"
+  | "notch"
+  | "sheen"
+  | "neon"
+  | "stamp"
+  | "soft"
+  | "spotlight"
 export type FontFamily =
   | "system"
   | "inter"
@@ -77,6 +89,8 @@ type ThemeProviderState = {
   setSurfaceStyle: (style: SurfaceStyle) => void
   cardBorder: CardBorder
   setCardBorder: (style: CardBorder) => void
+  buttonStyle: ButtonStyle
+  setButtonStyle: (style: ButtonStyle) => void
   gradientColor1: string
   setGradientColor1: (color: string) => void
   gradientColorMid: string
@@ -113,6 +127,8 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
   setSurfaceStyle: () => null,
   cardBorder: "default",
   setCardBorder: () => null,
+  buttonStyle: "default",
+  setButtonStyle: () => null,
   gradientColor1: "",
   setGradientColor1: () => null,
   gradientColorMid: "",
@@ -236,6 +252,9 @@ export function ThemeProvider({
   const [cardBorder, setCardBorderState] = useState<CardBorder>(
     () => (localStorage.getItem(`${STORAGE_PREFIX}-card-border`) as CardBorder) || "default"
   )
+  const [buttonStyle, setButtonStyleState] = useState<ButtonStyle>(
+    () => (localStorage.getItem(`${STORAGE_PREFIX}-button-style`) as ButtonStyle) || "default"
+  )
   const [gradientColor1, setGradientColor1State] = useState<string>(
     () => localStorage.getItem(`${STORAGE_PREFIX}-gradient-color-1`) || ""
   )
@@ -325,6 +344,25 @@ export function ThemeProvider({
   useEffect(() => {
     document.documentElement.setAttribute("data-card-border", cardBorder)
   }, [cardBorder])
+  useEffect(() => {
+    document.documentElement.setAttribute("data-button-style", buttonStyle)
+  }, [buttonStyle])
+
+  // Pointer position on the hovered button, for the "spotlight" button style.
+  // Cheap enough to leave on: it only touches elements the pointer is over.
+  useEffect(() => {
+    const handler = (e: PointerEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest?.<HTMLElement>(
+        '[data-slot="button"]'
+      )
+      if (!target) return
+      const rect = target.getBoundingClientRect()
+      target.style.setProperty("--btn-mx", `${e.clientX - rect.left}px`)
+      target.style.setProperty("--btn-my", `${e.clientY - rect.top}px`)
+    }
+    document.addEventListener("pointermove", handler, { passive: true })
+    return () => document.removeEventListener("pointermove", handler)
+  }, [])
   useEffect(() => {
     const root = document.documentElement
     if (gradientColor1) root.style.setProperty("--gradient-color-1", gradientColor1)
@@ -419,6 +457,10 @@ export function ThemeProvider({
     localStorage.setItem(`${STORAGE_PREFIX}-card-border`, s)
     setCardBorderState(s)
   }
+  const setButtonStyle = (s: ButtonStyle) => {
+    localStorage.setItem(`${STORAGE_PREFIX}-button-style`, s)
+    setButtonStyleState(s)
+  }
   const setGradientColor1 = (c: string) => {
     if (c) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-1`, c)
     else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-1`)
@@ -458,6 +500,7 @@ export function ThemeProvider({
       fontFamily,
       surfaceStyle,
       cardBorder,
+      buttonStyle,
       gradientColor1,
       gradientColorMid,
       gradientColor2,
@@ -470,6 +513,8 @@ export function ThemeProvider({
   const loadSavedPreset = (id: string) => {
     const preset = savedPresetsState.find((p) => p.id === id)
     if (!preset) return
+    // Presets saved before the button-style axis existed have no value for it
+    const presetButtonStyle = preset.buttonStyle ?? "default"
     const effectiveMode = getEffectiveMode(preset.theme)
     const activeOverrides =
       effectiveMode === "light" ? preset.colorOverridesLight : preset.colorOverridesDark
@@ -483,6 +528,7 @@ export function ThemeProvider({
     localStorage.setItem(`${STORAGE_PREFIX}-font-family`, preset.fontFamily)
     localStorage.setItem(`${STORAGE_PREFIX}-surface`, preset.surfaceStyle)
     localStorage.setItem(`${STORAGE_PREFIX}-card-border`, preset.cardBorder)
+    localStorage.setItem(`${STORAGE_PREFIX}-button-style`, presetButtonStyle)
     if (preset.gradientColor1) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-1`, preset.gradientColor1)
     else localStorage.removeItem(`${STORAGE_PREFIX}-gradient-color-1`)
     if (preset.gradientColorMid) localStorage.setItem(`${STORAGE_PREFIX}-gradient-color-mid`, preset.gradientColorMid)
@@ -498,6 +544,7 @@ export function ThemeProvider({
     setFontFamilyState(preset.fontFamily)
     setSurfaceStyleState(preset.surfaceStyle)
     setCardBorderState(preset.cardBorder)
+    setButtonStyleState(presetButtonStyle)
     setGradientColor1State(preset.gradientColor1)
     setGradientColorMidState(preset.gradientColorMid)
     setGradientColor2State(preset.gradientColor2)
@@ -532,6 +579,8 @@ export function ThemeProvider({
         setSurfaceStyle,
         cardBorder,
         setCardBorder,
+        buttonStyle,
+        setButtonStyle,
         gradientColor1,
         setGradientColor1,
         gradientColorMid,

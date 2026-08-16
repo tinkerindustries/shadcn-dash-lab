@@ -20,6 +20,7 @@ import {
   type CardBorder,
 } from "@/components/theme-provider"
 import { colorGroups } from "@/data/theme-presets"
+import { buttonStyleOptions } from "@/data/button-styles"
 import { cssVarToHex } from "@/lib/color-utils"
 import { cn } from "@/lib/utils"
 
@@ -489,6 +490,7 @@ export function ThemeCustomizerPanel({ onClose }: { onClose: () => void }) {
     fontFamily, setFontFamily,
     surfaceStyle, setSurfaceStyle,
     cardBorder, setCardBorder,
+    buttonStyle, setButtonStyle,
     gradientColor1, setGradientColor1,
     gradientColorMid, setGradientColorMid,
     gradientColor2, setGradientColor2,
@@ -726,6 +728,48 @@ export function ThemeCustomizerPanel({ onClose }: { onClose: () => void }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <Separator />
+
+          {/* ── Button Style ───────────────────── */}
+          <div className="space-y-3">
+            <SectionLabel>Button Style</SectionLabel>
+            <div className="grid grid-cols-2 gap-2">
+              {buttonStyleOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setButtonStyle(option.value)}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 transition-colors cursor-pointer",
+                    buttonStyle === option.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  {/* Live preview — the same CSS the app uses, scoped to this tile */}
+                  <div
+                    data-button-style={option.value}
+                    className="flex w-full items-center justify-center gap-1.5 py-1"
+                  >
+                    <Button asChild size="sm" className="pointer-events-none">
+                      <span>Aa</span>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="pointer-events-none">
+                      <span>Aa</span>
+                    </Button>
+                  </div>
+                  <span className="text-xs font-medium">{option.label}</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight text-center">{option.description}</span>
+                  {buttonStyle === option.value && (
+                    <div className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Depth treatment applied to every button. See them full size on the Buttons page.
+            </p>
           </div>
 
           <Separator />

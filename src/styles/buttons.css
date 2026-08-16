@@ -1,0 +1,530 @@
+/* ─────────────────────────────────────────────────────────────────
+   Button depth treatments
+
+   Each treatment lives in its own @scope block rooted at
+   [data-button-style="…"] and bounded by the next [data-button-style]
+   ancestor. That means:
+     • the app-wide setting on <html> styles every button,
+     • a nested wrapper (customizer preview, Button Lab row) wins for
+       its own subtree without the outer style leaking in,
+     • no !important and no specificity arms race.
+
+   Treatments are keyed off the [data-variant] attribute the Button
+   component already emits, so solid / outline / ghost each get an
+   appropriate amount of chrome. Link buttons are always left alone.
+   ───────────────────────────────────────────────────────────────── */
+
+@property --btn-cut {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+}
+
+/* Light/shade tokens — the same treatment needs less white in dark mode
+   and more cast shadow in light mode to read as physical. */
+:root {
+    --btn-hi: rgb(255 255 255 / 0.5);
+    --btn-hi-soft: rgb(255 255 255 / 0.18);
+    --btn-lo: rgb(0 0 0 / 0.2);
+    --btn-lo-soft: rgb(0 0 0 / 0.1);
+    --btn-cast: rgb(0 0 0 / 0.22);
+    --btn-cast-strong: rgb(0 0 0 / 0.3);
+}
+
+.dark {
+    --btn-hi: rgb(255 255 255 / 0.24);
+    --btn-hi-soft: rgb(255 255 255 / 0.08);
+    --btn-lo: rgb(0 0 0 / 0.45);
+    --btn-lo-soft: rgb(0 0 0 / 0.25);
+    --btn-cast: rgb(0 0 0 / 0.5);
+    --btn-cast-strong: rgb(0 0 0 / 0.65);
+}
+
+/* Accent used by glow / spotlight / notch treatments. */
+[data-slot="button"] {
+    --btn-tint: var(--primary);
+}
+[data-slot="button"][data-variant="destructive"] {
+    --btn-tint: var(--destructive);
+}
+
+/* ═══ Embossed ═══════════════════════════════════════════════════
+   A moulded cap: top lip catches light, bottom lip is in shade, the
+   whole thing sits on a cast shadow and physically depresses. */
+
+@scope ([data-button-style="physical"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        background-image: linear-gradient(
+            to bottom,
+            rgb(255 255 255 / 0.16),
+            rgb(255 255 255 / 0.02) 48%,
+            rgb(0 0 0 / 0.07)
+        );
+        box-shadow:
+            inset 0 1px 0 0 var(--btn-hi),
+            inset 0 -1px 0 0 var(--btn-lo),
+            0 1px 1px -0.5px var(--btn-cast),
+            0 3px 6px -3px var(--btn-cast-strong);
+        text-shadow: 0 1px 0 rgb(0 0 0 / 0.18);
+        transition:
+            transform 0.12s cubic-bezier(0.2, 0, 0, 1),
+            box-shadow 0.12s cubic-bezier(0.2, 0, 0, 1),
+            filter 0.12s;
+        will-change: transform;
+    }
+
+    [data-slot="button"][data-variant="ghost"] {
+        box-shadow: none;
+        background-image: none;
+        text-shadow: none;
+    }
+    [data-slot="button"][data-variant="ghost"]:hover {
+        box-shadow:
+            inset 0 1px 0 0 var(--btn-hi-soft),
+            0 1px 2px -1px var(--btn-cast);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        box-shadow:
+            inset 0 1px 0 0 var(--btn-hi),
+            inset 0 -1px 0 0 var(--btn-lo),
+            0 2px 2px -1px var(--btn-cast),
+            0 6px 12px -4px var(--btn-cast-strong);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: translateY(1px);
+        filter: brightness(0.96);
+        background-image: linear-gradient(to bottom, rgb(0 0 0 / 0.1), rgb(0 0 0 / 0));
+        box-shadow:
+            inset 0 2px 4px -1px rgb(0 0 0 / 0.35),
+            inset 0 1px 0 0 var(--btn-lo),
+            0 0 0 0 var(--btn-cast);
+    }
+}
+
+/* ═══ Bevel ══════════════════════════════════════════════════════
+   Hard-edged chamfer — two crisp inset rings, light from the top
+   left, that invert on press. No blur anywhere. */
+
+@scope ([data-button-style="bevel"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        border-color: transparent;
+        box-shadow:
+            inset 1px 1px 0 0 var(--btn-hi),
+            inset -1px -1px 0 0 var(--btn-lo),
+            inset 2px 2px 0 0 var(--btn-hi-soft),
+            inset -2px -2px 0 0 var(--btn-lo-soft),
+            0 1px 0 0 var(--btn-cast);
+        text-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+        transition:
+            box-shadow 0.08s linear,
+            transform 0.08s linear;
+    }
+
+    [data-slot="button"][data-variant="outline"],
+    [data-slot="button"][data-variant="ghost"] {
+        background-color: color-mix(in oklch, var(--foreground) 5%, transparent);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        box-shadow:
+            inset 1px 1px 0 0 var(--btn-hi),
+            inset -1px -1px 0 0 var(--btn-lo),
+            inset 3px 3px 0 0 var(--btn-hi-soft),
+            inset -3px -3px 0 0 var(--btn-lo-soft),
+            0 1px 0 0 var(--btn-cast);
+    }
+
+    /* Press inverts the light source — the cap sinks into the surface. */
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: translateY(1px);
+        text-shadow: none;
+        box-shadow:
+            inset 1px 1px 0 0 var(--btn-lo),
+            inset -1px -1px 0 0 var(--btn-hi-soft),
+            inset 2px 2px 0 0 var(--btn-lo-soft),
+            inset 0 0 0 0 var(--btn-cast);
+    }
+}
+
+/* ═══ Glass ══════════════════════════════════════════════════════
+   Translucent slab: blurred backdrop, a specular wash across the top
+   half and a hairline of light along the very top edge. */
+
+@scope ([data-button-style="glass"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        border: 1px solid rgb(255 255 255 / 0.14);
+        backdrop-filter: blur(12px) saturate(1.8);
+        -webkit-backdrop-filter: blur(12px) saturate(1.8);
+        box-shadow:
+            inset 0 1px 0 0 rgb(255 255 255 / 0.35),
+            inset 0 -1px 0 0 rgb(255 255 255 / 0.06),
+            0 4px 14px -6px var(--btn-cast-strong);
+        transition:
+            background-color 0.2s,
+            box-shadow 0.2s,
+            transform 0.15s;
+    }
+
+    /* Fills drop to partial alpha so the blur has something to do. */
+    [data-slot="button"][data-variant="default"] {
+        background-color: color-mix(in oklch, var(--primary) 80%, transparent);
+    }
+    [data-slot="button"][data-variant="destructive"] {
+        background-color: color-mix(in oklch, var(--destructive) 82%, transparent);
+    }
+    [data-slot="button"][data-variant="secondary"] {
+        background-color: color-mix(in oklch, var(--secondary) 55%, transparent);
+    }
+    [data-slot="button"][data-variant="outline"],
+    [data-slot="button"][data-variant="ghost"] {
+        background-color: color-mix(in oklch, var(--foreground) 8%, transparent);
+    }
+
+    /* Specular wash — sits above the fill, below the label. */
+    [data-slot="button"]:not([data-variant="link"])::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 55%;
+        z-index: -1;
+        background: linear-gradient(
+            to bottom,
+            rgb(255 255 255 / 0.28),
+            rgb(255 255 255 / 0)
+        );
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        transform: translateY(-1px);
+        box-shadow:
+            inset 0 1px 0 0 rgb(255 255 255 / 0.45),
+            inset 0 -1px 0 0 rgb(255 255 255 / 0.08),
+            0 8px 22px -8px var(--btn-cast-strong);
+    }
+    [data-slot="button"]:not([data-variant="link"]):hover::before {
+        opacity: 1;
+    }
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow:
+            inset 0 1px 3px 0 rgb(0 0 0 / 0.25),
+            inset 0 1px 0 0 rgb(255 255 255 / 0.2);
+    }
+}
+
+/* ═══ Notched ════════════════════════════════════════════════════
+   Cut corners instead of rounded ones, plus an accent rail down the
+   leading edge. The cut deepens on hover (animatable because
+   --btn-cut is a registered property). */
+
+@scope ([data-button-style="notch"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        --btn-cut: 9px;
+        position: relative;
+        border-radius: 0;
+        border-color: transparent;
+        clip-path: polygon(
+            var(--btn-cut) 0,
+            100% 0,
+            100% calc(100% - var(--btn-cut)),
+            calc(100% - var(--btn-cut)) 100%,
+            0 100%,
+            0 var(--btn-cut)
+        );
+        box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 35%, transparent);
+        transition:
+            --btn-cut 0.2s ease,
+            background-color 0.2s,
+            box-shadow 0.2s;
+    }
+
+    [data-slot="button"][data-variant="outline"],
+    [data-slot="button"][data-variant="ghost"] {
+        background-color: color-mix(in oklch, var(--btn-tint) 10%, transparent);
+    }
+
+    /* Accent rail — clipped by the corner cuts, which is the point. */
+    [data-slot="button"]:not([data-variant="link"])::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 2px;
+        background: var(--btn-tint);
+        opacity: 0.75;
+        transition: opacity 0.2s;
+    }
+    [data-slot="button"][data-variant="default"]::before,
+    [data-slot="button"][data-variant="destructive"]::before {
+        background: var(--primary-foreground);
+        opacity: 0.5;
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        --btn-cut: 13px;
+    }
+    [data-slot="button"]:not([data-variant="link"]):hover::before {
+        opacity: 1;
+    }
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        --btn-cut: 6px;
+    }
+
+    [data-slot="button"][data-size="xs"],
+    [data-slot="button"][data-size="icon-xs"] {
+        --btn-cut: 6px;
+    }
+}
+
+/* ═══ Sheen ══════════════════════════════════════════════════════
+   A specular bar sweeps across on hover, then parks off-screen. */
+
+@scope ([data-button-style="sheen"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+            inset 0 1px 0 0 var(--btn-hi-soft),
+            0 2px 6px -3px var(--btn-cast);
+    }
+
+    [data-slot="button"]:not([data-variant="link"])::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        bottom: -50%;
+        left: -60%;
+        width: 40%;
+        transform: translateX(-200%) rotate(18deg);
+        background: linear-gradient(
+            to right,
+            rgb(255 255 255 / 0),
+            rgb(255 255 255 / 0.45),
+            rgb(255 255 255 / 0)
+        );
+        pointer-events: none;
+        transition: transform 0.75s cubic-bezier(0.25, 0.8, 0.3, 1);
+    }
+
+    [data-slot="button"][data-variant="secondary"]::after,
+    [data-slot="button"][data-variant="outline"]::after,
+    [data-slot="button"][data-variant="ghost"]::after {
+        background: linear-gradient(
+            to right,
+            color-mix(in oklch, var(--btn-tint) 0%, transparent),
+            color-mix(in oklch, var(--btn-tint) 28%, transparent),
+            color-mix(in oklch, var(--btn-tint) 0%, transparent)
+        );
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover::after {
+        transform: translateX(560%) rotate(18deg);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: scale(0.975);
+    }
+}
+
+/* ═══ Neon ═══════════════════════════════════════════════════════
+   Rim light plus an outer bloom in the accent hue; the bloom
+   breathes while hovered. */
+
+@keyframes btnfx-bloom {
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 75%, transparent),
+            inset 0 0 12px -6px color-mix(in oklch, var(--btn-tint) 90%, transparent),
+            0 0 18px 1px color-mix(in oklch, var(--btn-tint) 40%, transparent);
+    }
+    50% {
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 95%, transparent),
+            inset 0 0 16px -5px color-mix(in oklch, var(--btn-tint) 100%, transparent),
+            0 0 28px 3px color-mix(in oklch, var(--btn-tint) 60%, transparent);
+    }
+}
+
+@scope ([data-button-style="neon"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        border-color: transparent;
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 55%, transparent),
+            inset 0 0 10px -7px color-mix(in oklch, var(--btn-tint) 80%, transparent),
+            0 0 12px 0 color-mix(in oklch, var(--btn-tint) 22%, transparent);
+        transition:
+            box-shadow 0.25s,
+            color 0.25s,
+            background-color 0.25s;
+    }
+
+    [data-slot="button"][data-variant="outline"],
+    [data-slot="button"][data-variant="ghost"],
+    [data-slot="button"][data-variant="secondary"] {
+        color: color-mix(in oklch, var(--btn-tint) 85%, var(--foreground));
+        background-color: color-mix(in oklch, var(--btn-tint) 8%, transparent);
+        text-shadow: 0 0 10px color-mix(in oklch, var(--btn-tint) 45%, transparent);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        animation: btnfx-bloom 1.8s ease-in-out infinite;
+    }
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        animation: none;
+        transform: scale(0.98);
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 100%, transparent),
+            inset 0 0 18px -4px color-mix(in oklch, var(--btn-tint) 100%, transparent),
+            0 0 6px -2px color-mix(in oklch, var(--btn-tint) 60%, transparent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        [data-slot="button"]:not([data-variant="link"]):hover {
+            animation: none;
+            box-shadow:
+                inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 90%, transparent),
+                0 0 24px 2px color-mix(in oklch, var(--btn-tint) 55%, transparent);
+        }
+    }
+}
+
+/* ═══ Stamp ══════════════════════════════════════════════════════
+   Hard offset block shadow — the button slides into its own shadow
+   when pressed. */
+
+@scope ([data-button-style="stamp"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        --btn-edge: color-mix(in oklch, var(--foreground) 85%, transparent);
+        border: 1.5px solid var(--btn-edge);
+        box-shadow: 3px 3px 0 0 var(--btn-edge);
+        transition:
+            transform 0.1s cubic-bezier(0.2, 0, 0, 1),
+            box-shadow 0.1s cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    [data-slot="button"][data-variant="default"] {
+        --btn-edge: color-mix(in oklch, var(--foreground) 60%, var(--primary));
+    }
+    [data-slot="button"][data-variant="ghost"] {
+        border-color: transparent;
+        box-shadow: none;
+    }
+    [data-slot="button"][data-variant="ghost"]:hover {
+        border-color: var(--btn-edge);
+        box-shadow: 3px 3px 0 0 var(--btn-edge);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 0 var(--btn-edge);
+    }
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: translate(3px, 3px);
+        box-shadow: 0 0 0 0 var(--btn-edge);
+    }
+}
+
+/* ═══ Pillow ═════════════════════════════════════════════════════
+   Soft extruded surface — diffuse light from the top left, matching
+   shade bottom right, and it presses *into* the page. */
+
+@scope ([data-button-style="soft"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        border-color: transparent;
+        box-shadow:
+            -3px -3px 8px -2px var(--btn-hi),
+            4px 4px 10px -3px var(--btn-cast-strong),
+            inset 0 1px 0 0 var(--btn-hi-soft);
+        transition:
+            box-shadow 0.22s ease,
+            transform 0.22s ease;
+    }
+
+    [data-slot="button"][data-variant="outline"],
+    [data-slot="button"][data-variant="ghost"] {
+        background-color: var(--card);
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        transform: translateY(-1px);
+        box-shadow:
+            -4px -4px 12px -3px var(--btn-hi),
+            6px 6px 16px -4px var(--btn-cast-strong),
+            inset 0 1px 0 0 var(--btn-hi-soft);
+    }
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow:
+            inset -3px -3px 8px -3px var(--btn-hi-soft),
+            inset 4px 4px 10px -4px var(--btn-cast-strong);
+    }
+}
+
+/* ═══ Spotlight ══════════════════════════════════════════════════
+   A highlight that tracks the pointer. --btn-mx / --btn-my are set
+   by the pointer listener in theme-provider.tsx. */
+
+@scope ([data-button-style="spotlight"]) to ([data-button-style]) {
+    [data-slot="button"]:not([data-variant="link"]) {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 25%, transparent),
+            0 2px 8px -4px var(--btn-cast);
+        transition: box-shadow 0.2s;
+    }
+
+    [data-slot="button"][data-variant="outline"],
+    [data-slot="button"][data-variant="ghost"],
+    [data-slot="button"][data-variant="secondary"] {
+        background-color: color-mix(in oklch, var(--btn-tint) 7%, transparent);
+    }
+
+    [data-slot="button"]:not([data-variant="link"])::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        opacity: 0;
+        background: radial-gradient(
+            120px circle at var(--btn-mx, 50%) var(--btn-my, 50%),
+            rgb(255 255 255 / 0.35),
+            rgb(255 255 255 / 0.08) 40%,
+            transparent 70%
+        );
+        transition: opacity 0.25s;
+    }
+
+    [data-slot="button"][data-variant="outline"]::before,
+    [data-slot="button"][data-variant="ghost"]::before,
+    [data-slot="button"][data-variant="secondary"]::before {
+        background: radial-gradient(
+            120px circle at var(--btn-mx, 50%) var(--btn-my, 50%),
+            color-mix(in oklch, var(--btn-tint) 45%, transparent),
+            color-mix(in oklch, var(--btn-tint) 12%, transparent) 40%,
+            transparent 70%
+        );
+    }
+
+    [data-slot="button"]:not([data-variant="link"]):hover::before {
+        opacity: 1;
+    }
+    [data-slot="button"]:not([data-variant="link"]):hover {
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--btn-tint) 55%, transparent),
+            0 4px 14px -6px var(--btn-cast-strong);
+    }
+    [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+        transform: scale(0.985);
+    }
+}

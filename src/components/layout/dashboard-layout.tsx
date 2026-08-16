@@ -6,6 +6,7 @@ import { DashboardPage } from "@/components/dashboard/dashboard-page"
 import { ServersPage } from "@/components/servers/servers-page"
 import { ContainersPage } from "@/components/containers/containers-page"
 import { LogsPage } from "@/components/logs/logs-page"
+import { ButtonLabPage } from "@/components/buttons/button-lab-page"
 import { CommandPalette } from "@/components/command-palette"
 import { ThemeCustomizerPanel } from "@/components/theme-customizer"
 import { cn } from "@/lib/utils"
@@ -37,6 +38,8 @@ export function DashboardLayout() {
                 <ContainersPage />
               ) : activePage === "Logs" ? (
                 <LogsPage />
+              ) : activePage === "Buttons" ? (
+                <ButtonLabPage />
               ) : (
                 <DashboardPage />
               )}

@@ -25,13 +25,15 @@ This is a React 19 + TypeScript SPA built with Vite. It's a server monitoring da
 
 ### Key Patterns
 
-**Theme System** (`src/components/theme-provider.tsx`): Central `ThemeProvider` context managing light/dark mode, color presets, border radius, density, font size, font family, and surface style. All settings persist to localStorage with `shadcn-dash-lab` prefix. Color overrides are stored per-mode (light/dark). The `useTheme()` hook exposes all theme state and setters.
+**Theme System** (`src/components/theme-provider.tsx`): Central `ThemeProvider` context managing light/dark mode, color presets, border radius, density, font size, font family, surface style, and button style. All settings persist to localStorage with `shadcn-dash-lab` prefix. Color overrides are stored per-mode (light/dark). The `useTheme()` hook exposes all theme state and setters.
 
 **Color Presets** (`src/data/theme-presets.ts`): Named color themes (neutral, slate, midnight, forest, sunset, cyberpunk, nord) that set CSS custom variables on `:root`. Colors use oklch color space. The theme customizer allows per-variable overrides on top of presets.
 
 **Layout Structure:** `App` → `DashboardLayout` → `SidebarProvider` + `AppSidebar` + `TopNavbar` + `DashboardPage`. The sidebar uses shadcn's `SidebarProvider`/`SidebarInset` pattern.
 
 **Spacing:** Uses CSS custom properties (`--space-section`, `--space-page`) applied via inline `style` rather than Tailwind classes for section/page-level spacing, controlled by the density setting.
+
+**Button depth treatments** (`src/styles/buttons.css`): Each treatment is an `@scope ([data-button-style="…"]) to ([data-button-style])` block targeting `[data-slot="button"]` and branching on the `[data-variant]` attribute the Button component emits. The scope bound means a nested `data-button-style` wrapper (customizer preview tile, Button Lab row) overrides the app-wide value for its subtree — that's how the Buttons page shows every treatment at once. Options live in `src/data/button-styles.ts`.
 
 **Dashboard widgets** live in `src/components/dashboard/` and consume static data from `src/data/dummy-data.ts`.
 

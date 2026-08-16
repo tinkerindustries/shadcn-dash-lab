@@ -12,6 +12,7 @@ import {
   Terminal,
   Settings,
   ScrollText,
+  SquareMousePointer,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -39,6 +40,7 @@ export const iconMap: Record<string, LucideIcon> = {
   terminal: Terminal,
   settings: Settings,
   "scroll-text": ScrollText,
+  "square-mouse-pointer": SquareMousePointer,
 }
 
 export const navGroups: NavGroup[] = [
@@ -67,6 +69,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { title: "Users", icon: "users" },
       { title: "Console", icon: "terminal" },
+      { title: "Buttons", icon: "square-mouse-pointer" },
       { title: "Settings", icon: "settings" },
     ],
   },
